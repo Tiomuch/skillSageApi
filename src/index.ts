@@ -1,5 +1,5 @@
 import express, { Request, Response, NextFunction } from 'express'
-// import router from './router'
+import router from './routes/index.js'
 import cors from 'cors'
 import dotenv from 'dotenv'
 
@@ -25,6 +25,6 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 app.use(cors(corsOptions))
 
 app.use(express.json())
-// app.use('/api', router)
+app.use('/api', router)
 
 app.listen(PORT, () => console.log(`Server started on port - ${PORT}`))
