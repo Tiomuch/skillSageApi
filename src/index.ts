@@ -27,4 +27,11 @@ app.use(cors(corsOptions))
 app.use(express.json())
 app.use('/api', router)
 
+app.use((error: Error, req: Request, res: Response) => {
+  res.status(500).json({
+    message: 'Something went wrong',
+    error,
+  })
+})
+
 app.listen(PORT, () => console.log(`Server started on port - ${PORT}`))
