@@ -44,11 +44,12 @@ export const register = async (req: Request, res: Response): Promise<void> => {
   )
   const newUser = newPerson.rows[0]
 
-  const token = jwt.sign({ id: newUser.id, username }, process.env.TOKEN_KEY || '', {
+  const accessToken = jwt.sign({ id: newUser.id, username }, process.env.ACCESS_TOKEN_KEY || '', {
     expiresIn: '1h',
   })
+  const refreshToken = jwt.sign({ id: newUser.id, username }, process.env.REFRESH_TOKEN_KEY || '')
 
-  res.status(200).json({ data: newUser, token })
+  res.status(200).json({ data: newUser, accessToken, refreshToken })
 }
 
 export const login = async (req: Request, res: Response): Promise<void> => {
@@ -75,11 +76,12 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
   const user = users.rows[0]
 
-  const token = jwt.sign({ id: user.id, username }, process.env.TOKEN_KEY || '', {
+  const accessToken = jwt.sign({ id: user.id, username }, process.env.ACCESS_TOKEN_KEY || '', {
     expiresIn: '1h',
   })
+  const refreshToken = jwt.sign({ id: user.id, username }, process.env.REFRESH_TOKEN_KEY || '')
 
-  res.status(200).json({ data: user, token })
+  res.status(200).json({ data: user, accessToken, refreshToken })
 }
 
 export const profile = async (req: Request, res: Response): Promise<void> => {
@@ -138,4 +140,27 @@ export const passwordReset = async (req: Request, res: Response): Promise<void> 
   res.status(200).json({
     message: 'Password changed successfully',
   })
+}
+
+export const refreshToken = async (req: Request, res: Response): Promise<void> => {
+  const token = req.body.token
+
+  if (!token) {
+    res.status(403).send('A token is required for refreshing')
+  }
+
+  try {
+    jwt.verify(token, process.env.REFRESH_TOKEN_KEY as string)
+
+    const user = jwt.decode(token) as User
+
+    const accessToken = jwt.sign({ id: user.id, username: user.username }, process.env.ACCESS_TOKEN_KEY || '', {
+      expiresIn: '1h',
+    })
+
+    res.status(200).json({ accessToken })
+  } catch (error) {
+    console.log('error', error)
+    res.status(401).send('Invalid Token')
+  }
 }

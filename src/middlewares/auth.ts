@@ -12,7 +12,7 @@ const verifyToken = (req: Request, res: Response, next: NextFunction) => {
   }
 
   try {
-    jwt.verify(token?.split(' ')[1], process.env.TOKEN_KEY as string)
+    jwt.verify(token?.split(' ')[1], process.env.ACCESS_TOKEN_KEY as string)
   } catch (err) {
     return res.status(401).send('Invalid Token')
   }
