@@ -2,7 +2,7 @@ import { Router } from 'express'
 import authRouter from './auth.router.js'
 import postsRouter from './posts.router.js'
 import commentsRouter from './comments.router.js'
-import likesRouter from './likes.router.js'
+import likesRouter from './postLikes.router.js'
 import categoryRouter from './category.router.js'
 import verifyToken from '../middlewares/auth.js'
 
@@ -12,6 +12,6 @@ router.use('/auth', authRouter)
 router.use('/categories', verifyToken, categoryRouter)
 router.use('/posts', verifyToken, postsRouter)
 router.use('/comments', verifyToken, commentsRouter)
-router.use('/likes', verifyToken, likesRouter)
+router.use('/post-likes', verifyToken, likesRouter)
 
 export default router
