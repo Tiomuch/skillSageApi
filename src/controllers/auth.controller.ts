@@ -96,6 +96,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       expiresIn: '30d',
     })
 
+    await db.query('UPDATE users set refresh_token = $1 where username = $2 returning *', [refreshToken, username])
+
     res.status(200).json({ data: user, accessToken, refreshToken })
   } catch (error) {
     res.status(500).json({
@@ -199,7 +201,7 @@ export const refreshToken = async (req: Request, res: Response): Promise<void> =
       return
     }
 
-    if (!users?.rows[0]?.refresh_token === token) {
+    if (users?.rows[0]?.refresh_token !== token) {
       res.status(401).json({
         message: 'Tokens do not match',
       })
