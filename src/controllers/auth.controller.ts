@@ -53,9 +53,12 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       expiresIn: '30d',
     })
 
-    await db.query('UPDATE users set refresh_token = $1 where username = $2 returning *', [refreshToken, username])
+    const user = await db.query('UPDATE users set refresh_token = $1 where username = $2 returning *', [
+      refreshToken,
+      username,
+    ])
 
-    res.status(200).json({ data: newUser, accessToken, refreshToken })
+    res.status(200).json({ data: user.rows[0], accessToken })
   } catch (error) {
     res.status(500).json({
       message: 'Something went wrong',
@@ -87,18 +90,21 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return
     }
 
-    const user = users.rows[0]
+    const newUser = users.rows[0]
 
-    const accessToken = jwt.sign({ id: user.id, username }, process.env.ACCESS_TOKEN_KEY || '', {
+    const accessToken = jwt.sign({ id: newUser.id, username }, process.env.ACCESS_TOKEN_KEY || '', {
       expiresIn: '1h',
     })
-    const refreshToken = jwt.sign({ id: user.id, username }, process.env.REFRESH_TOKEN_KEY || '', {
+    const refreshToken = jwt.sign({ id: newUser.id, username }, process.env.REFRESH_TOKEN_KEY || '', {
       expiresIn: '30d',
     })
 
-    await db.query('UPDATE users set refresh_token = $1 where username = $2 returning *', [refreshToken, username])
+    const user = await db.query('UPDATE users set refresh_token = $1 where username = $2 returning *', [
+      refreshToken,
+      username,
+    ])
 
-    res.status(200).json({ data: user, accessToken, refreshToken })
+    res.status(200).json({ data: user.rows[0], accessToken })
   } catch (error) {
     res.status(500).json({
       message: 'Something went wrong',

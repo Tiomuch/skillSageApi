@@ -40,11 +40,11 @@ export const createCategory = async (req: Request, res: Response): Promise<void>
 
 export const getCategories = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { limit = 10 } = req.query
+    const { limit = 10, title = '' } = req.query
 
-    const categories = await db.query('SELECT * from categories limit $1', [limit])
+    const categories = await db.query(`SELECT * from categories WHERE title ILIKE $1 || '%' limit $2`, [title, limit])
 
-    const total = await db.query('SELECT COUNT(*) from categories')
+    const total = await db.query(`SELECT COUNT(*) from categories WHERE title ILIKE $1 || '%'`, [title])
 
     res.status(200).json({ data: categories.rows, total: +total.rows[0].count })
   } catch (error) {
