@@ -42,11 +42,25 @@ export const getCategories = async (req: Request, res: Response): Promise<void> 
   try {
     const { limit = 10, title = '' } = req.query
 
-    const categories = await db.query(`SELECT * from categories WHERE title ILIKE $1 || '%' limit $2`, [title, limit])
+    const categories = await db.query(
+      `
+      SELECT categories.*, COUNT(posts.*) AS post_count
+      FROM categories
+      LEFT JOIN posts ON categories.id = posts.category_id
+      WHERE categories.title ILIKE $1 || '%'
+      GROUP BY categories.id
+      LIMIT $2`,
+      [title, limit],
+    )
 
     const total = await db.query(`SELECT COUNT(*) from categories WHERE title ILIKE $1 || '%'`, [title])
 
-    res.status(200).json({ data: categories.rows, total: +total.rows[0].count })
+    const formattedCategories = categories.rows.map((row) => ({
+      ...row,
+      post_count: +row.post_count,
+    }))
+
+    res.status(200).json({ data: formattedCategories, total: +total.rows[0].count })
   } catch (error) {
     res.status(500).json({
       message: 'Something went wrong',
