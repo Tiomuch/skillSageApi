@@ -68,14 +68,25 @@ export const getComments = async (req: Request, res: Response): Promise<void> =>
 export const getCommentById = async (req: Request, res: Response): Promise<void> => {
   try {
     const id = req.params.id
+    const token = req.headers['authorization'] as string
+    const user = jwt.decode(token?.split(' ')[1]) as User | null
 
-    const comments = await db.query('SELECT * from comments WHERE id = $1', [id])
+    const comments = await db.query(
+      `SELECT c.*, 
+        COALESCE(SUM(CASE WHEN l.liked THEN 1 ELSE 0 END), 0) as likes_count,
+        COALESCE(SUM(CASE WHEN NOT l.liked THEN 1 ELSE 0 END), 0) as dislikes_count,
+        MAX(CASE WHEN l.user_id = $1 THEN CAST(l.liked AS INT) ELSE NULL END) as liked
+      FROM comments c 
+      LEFT JOIN likes_for_comments l ON c.id = l.comment_id 
+      WHERE c.id = $2 
+      GROUP BY c.id`,
+      [user?.id, id],
+    )
 
     if (!comments?.rows[0]) {
       res.status(400).json({
         message: 'Comment does not exist',
       })
-
       return
     }
 
