@@ -6,11 +6,14 @@ const { Pool } = pg
 dotenv.config()
 
 const pool = new Pool({
-  user: 'postgres',
+  user: 'postgre',
   password: process.env.PASSWORD || 'password',
-  host: 'localhost',
+  host: 'dpg-chij1qak728hm23vhs00-a.frankfurt-postgres.render.com',
   port: 5432,
-  database: 'skillSage',
+  database: 'skillsage',
+  ssl: {
+    rejectUnauthorized: false,
+  },
 })
 
 export default pool
