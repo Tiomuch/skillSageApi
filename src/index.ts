@@ -10,12 +10,12 @@ const PORT = process.env.PORT || 8000
 const app = express()
 
 const corsOptions = {
-  origin: 'http://localhost:3000',
+  origin: '*',
   optionsSuccessStatus: 200,
 }
 
 app.use((req: Request, res: Response, next: NextFunction) => {
-  const origin = 'http://localhost:3000'
+  const origin = '*'
   res.header('Access-Control-Allow-Origin', origin)
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE')
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization')
