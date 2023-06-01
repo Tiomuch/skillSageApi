@@ -16,9 +16,10 @@ const corsOptions = {
 
 app.use((req: Request, res: Response, next: NextFunction) => {
   const origin = '*'
-  res.header('Access-Control-Allow-Origin', origin)
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE')
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization')
+  res.setHeader('Access-Control-Allow-Origin', origin)
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE')
+  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization')
+  res.setHeader('Access-Control-Allow-Credentials', 'false')
   next()
 })
 
@@ -31,7 +32,7 @@ app.use((error: Error, req: Request, res: Response) => {
   res.status(500).json({
     message: 'Something went wrong',
     error,
-    location: 'Main File'
+    location: 'Main File',
   })
 })
 
