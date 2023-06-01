@@ -31,6 +31,7 @@ app.use((error: Error, req: Request, res: Response) => {
   res.status(500).json({
     message: 'Something went wrong',
     error,
+    location: 'Main File'
   })
 })
 

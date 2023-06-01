@@ -34,6 +34,7 @@ export const createCategory = async (req: Request, res: Response): Promise<void>
     res.status(500).json({
       message: 'Something went wrong',
       error,
+      location: 'Create category method',
     })
   }
 }
@@ -65,6 +66,7 @@ export const getCategories = async (req: Request, res: Response): Promise<void> 
     res.status(500).json({
       message: 'Something went wrong',
       error,
+      location: 'Get categories method',
     })
   }
 }
@@ -91,6 +93,7 @@ export const updateCategory = async (req: Request, res: Response): Promise<void>
     res.status(500).json({
       message: 'Something went wrong',
       error,
+      location: 'Update category method',
     })
   }
 }
@@ -118,6 +121,7 @@ export const deleteCategory = async (req: Request, res: Response): Promise<void>
     res.status(500).json({
       message: 'Something went wrong',
       error,
+      location: 'Delete category method',
     })
   }
 }

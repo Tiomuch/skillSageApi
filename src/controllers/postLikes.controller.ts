@@ -32,6 +32,7 @@ export const createLike = async (req: Request, res: Response): Promise<void> => 
     res.status(500).json({
       message: 'Something went wrong',
       error,
+      location: 'Create like for post method',
     })
   }
 }
@@ -71,6 +72,7 @@ export const getLikes = async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({
       message: 'Something went wrong',
       error,
+      location: 'Get likes for post method',
     })
   }
 }
@@ -108,6 +110,7 @@ export const updateLike = async (req: Request, res: Response): Promise<void> => 
     res.status(500).json({
       message: 'Something went wrong',
       error,
+      location: 'Update like for post method',
     })
   }
 }
@@ -141,6 +144,7 @@ export const deleteLike = async (req: Request, res: Response): Promise<void> => 
     res.status(500).json({
       message: 'Something went wrong',
       error,
+      location: 'Delete like for post method',
     })
   }
 }

@@ -30,6 +30,7 @@ export const createComment = async (req: Request, res: Response): Promise<void> 
     res.status(500).json({
       message: 'Something went wrong',
       error,
+      location: 'Create comment method',
     })
   }
 }
@@ -61,6 +62,7 @@ export const getComments = async (req: Request, res: Response): Promise<void> =>
     res.status(500).json({
       message: 'Something went wrong',
       error,
+      location: 'Get comments method',
     })
   }
 }
@@ -95,6 +97,7 @@ export const getCommentById = async (req: Request, res: Response): Promise<void>
     res.status(500).json({
       message: 'Something went wrong',
       error,
+      location: 'Get comment by id method',
     })
   }
 }
@@ -121,6 +124,7 @@ export const updateComment = async (req: Request, res: Response): Promise<void> 
     res.status(500).json({
       message: 'Something went wrong',
       error,
+      location: 'Update comment method',
     })
   }
 }
@@ -148,6 +152,7 @@ export const deleteComment = async (req: Request, res: Response): Promise<void> 
     res.status(500).json({
       message: 'Something went wrong',
       error,
+      location: 'Delete comment method',
     })
   }
 }

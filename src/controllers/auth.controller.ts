@@ -63,6 +63,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({
       message: 'Something went wrong',
       error,
+      location: 'Register method',
     })
   }
 }
@@ -109,6 +110,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({
       message: 'Something went wrong',
       error,
+      location: 'Login method',
     })
   }
 }
@@ -141,6 +143,7 @@ export const profile = async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({
       message: 'Something went wrong',
       error,
+      location: 'Get Profile method',
     })
   }
 }
@@ -181,6 +184,7 @@ export const passwordReset = async (req: Request, res: Response): Promise<void> 
     res.status(500).json({
       message: 'Something went wrong',
       error,
+      location: 'Password reset method',
     })
   }
 }
@@ -263,6 +267,7 @@ export const updateUserData = async (req: Request, res: Response): Promise<void>
     res.status(500).json({
       message: 'Something went wrong',
       error,
+      location: 'Update user data method',
     })
   }
 }

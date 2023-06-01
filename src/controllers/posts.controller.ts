@@ -34,6 +34,7 @@ export const createPost = async (req: Request, res: Response): Promise<void> => 
     res.status(500).json({
       message: 'Something went wrong',
       error,
+      location: 'Create post method',
     })
   }
 }
@@ -78,6 +79,7 @@ export const getPosts = async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({
       message: 'Something went wrong',
       error,
+      location: 'Get posts method',
     })
   }
 }
@@ -115,6 +117,7 @@ export const getPostById = async (req: Request, res: Response): Promise<void> =>
     res.status(500).json({
       message: 'Something went wrong',
       error,
+      location: 'Get post by id method',
     })
   }
 }
@@ -144,6 +147,7 @@ export const updatePost = async (req: Request, res: Response): Promise<void> => 
     res.status(500).json({
       message: 'Something went wrong',
       error,
+      location: 'Update post method',
     })
   }
 }
@@ -171,6 +175,7 @@ export const deletePost = async (req: Request, res: Response): Promise<void> => 
     res.status(500).json({
       message: 'Something went wrong',
       error,
+      location: 'Delete post method',
     })
   }
 }
