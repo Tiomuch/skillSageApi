@@ -229,3 +229,40 @@ export const refreshToken = async (req: Request, res: Response): Promise<void> =
     res.status(401).send('Invalid Token')
   }
 }
+
+export const updateUserData = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { username, nickname } = req.body
+
+    let updateQuery = 'UPDATE users SET'
+    const values: any[] = []
+
+    if (username) {
+      updateQuery += ' username = $1'
+      values.push(username)
+    }
+
+    if (nickname) {
+      if (username) {
+        updateQuery += ','
+      }
+      updateQuery += ' nickname = $' + (values.length + 1)
+      values.push(nickname)
+    }
+
+    const token = req.headers['authorization'] as string
+    const user = jwt.decode(token?.split(' ')[1]) as User | null
+
+    updateQuery += ' WHERE username = $' + (values.length + 1) + ' RETURNING *'
+    values.push(user?.username)
+
+    const updatedUser = await db.query(updateQuery, values)
+
+    res.status(200).json(updatedUser.rows[0])
+  } catch (error) {
+    res.status(500).json({
+      message: 'Something went wrong',
+      error,
+    })
+  }
+}
