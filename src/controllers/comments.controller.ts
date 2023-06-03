@@ -42,22 +42,41 @@ export const getComments = async (req: Request, res: Response): Promise<void> =>
     const token = req.headers['authorization'] as string
     const user = jwt.decode(token?.split(' ')[1]) as User | null
 
-    const comments = await db.query(
-      `SELECT c.*, 
-        COALESCE(SUM(CASE WHEN l.liked THEN 1 ELSE 0 END), 0) as likes_count,
-        COALESCE(SUM(CASE WHEN NOT l.liked THEN 1 ELSE 0 END), 0) as dislikes_count,
-        MAX(CASE WHEN l.user_id = $1 THEN CAST(l.liked AS INT) ELSE NULL END) as liked
+    const query = `
+      SELECT c.*, 
+        COALESCE(SUM(CASE WHEN l.liked THEN 1 ELSE 0 END), 0) AS likes_count,
+        COALESCE(SUM(CASE WHEN NOT l.liked THEN 1 ELSE 0 END), 0) AS dislikes_count,
+        MAX(CASE WHEN l.user_id = $1 THEN CAST(l.liked AS INT) ELSE NULL END) AS liked,
+        u.username, u.id AS user_id, u.nickname
       FROM comments c 
-      LEFT JOIN likes_for_comments l ON c.id = l.comment_id 
-      GROUP BY c.id 
+      LEFT JOIN likes_for_comments l ON c.id = l.comment_id
+      JOIN users u ON c.user_id = u.id
+      GROUP BY c.id, u.id 
       ORDER BY c.created_at ${sort_variant}
-      LIMIT $2`,
-      [user?.id, limit],
-    )
+      LIMIT $2
+    `
 
-    const total = await db.query(`SELECT COUNT(*) from comments`)
+    const commentsResult = await db.query(query, [user?.id, limit])
 
-    res.status(200).json({ data: comments.rows, total: +total.rows[0].count })
+    const comments = commentsResult.rows.map((row) => ({
+      id: row.id,
+      user_id: row.user_id,
+      content: row.content,
+      created_at: row.created_at,
+      likes_count: row.likes_count,
+      dislikes_count: row.dislikes_count,
+      liked: row.liked,
+      user: {
+        id: row.user_id,
+        username: row.username,
+        nickname: row.nickname,
+      },
+    }))
+
+    const totalResult = await db.query(`SELECT COUNT(*) from comments`)
+    const total = +totalResult.rows[0].count
+
+    res.status(200).json({ data: comments, total })
   } catch (error) {
     res.status(500).json({
       message: 'Something went wrong',
@@ -73,26 +92,46 @@ export const getCommentById = async (req: Request, res: Response): Promise<void>
     const token = req.headers['authorization'] as string
     const user = jwt.decode(token?.split(' ')[1]) as User | null
 
-    const comments = await db.query(
-      `SELECT c.*, 
-        COALESCE(SUM(CASE WHEN l.liked THEN 1 ELSE 0 END), 0) as likes_count,
-        COALESCE(SUM(CASE WHEN NOT l.liked THEN 1 ELSE 0 END), 0) as dislikes_count,
-        MAX(CASE WHEN l.user_id = $1 THEN CAST(l.liked AS INT) ELSE NULL END) as liked
+    const query = `
+      SELECT c.*, 
+        COALESCE(SUM(CASE WHEN l.liked THEN 1 ELSE 0 END), 0) AS likes_count,
+        COALESCE(SUM(CASE WHEN NOT l.liked THEN 1 ELSE 0 END), 0) AS dislikes_count,
+        MAX(CASE WHEN l.user_id = $1 THEN CAST(l.liked AS INT) ELSE NULL END) AS liked,
+        u.username, u.id AS user_id, u.nickname
       FROM comments c 
       LEFT JOIN likes_for_comments l ON c.id = l.comment_id 
+      JOIN users u ON c.user_id = u.id
       WHERE c.id = $2 
-      GROUP BY c.id`,
-      [user?.id, id],
-    )
+      GROUP BY c.id, u.id
+    `
 
-    if (!comments?.rows[0]) {
+    const commentsResult = await db.query(query, [user?.id, id])
+
+    if (!commentsResult?.rows[0]) {
       res.status(400).json({
         message: 'Comment does not exist',
       })
       return
     }
 
-    res.status(200).json(comments?.rows[0])
+    const comment = commentsResult.rows[0]
+
+    const commentData = {
+      id: comment.id,
+      user_id: comment.user_id,
+      content: comment.content,
+      created_at: comment.created_at,
+      likes_count: comment.likes_count,
+      dislikes_count: comment.dislikes_count,
+      liked: comment.liked,
+      user: {
+        id: comment.user_id,
+        username: comment.username,
+        nickname: comment.nickname,
+      },
+    }
+
+    res.status(200).json(commentData)
   } catch (error) {
     res.status(500).json({
       message: 'Something went wrong',

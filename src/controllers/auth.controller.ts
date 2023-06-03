@@ -242,6 +242,16 @@ export const updateUserData = async (req: Request, res: Response): Promise<void>
     const values: any[] = []
 
     if (username) {
+      const users = await db.query<User>('SELECT * from users where username = $1', [username])
+
+      if (!!users?.rows[0]) {
+        res.status(400).json({
+          message: 'Username already in use',
+        })
+
+        return
+      }
+
       updateQuery += ' username = $1'
       values.push(username)
     }
