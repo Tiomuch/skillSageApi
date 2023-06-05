@@ -15,7 +15,7 @@
     "start": "npm run build && node build/index",
     "lint": "npx eslint ./src",
     "format": "npx eslint ./src --fix",
-    "vercel-build": "echo hello"
+    "vercel-build": "npx vercel --prod"
   },
   "keywords": [],
   "author": "",
