@@ -53,8 +53,8 @@ export const getPosts = async (req: Request, res: Response): Promise<void> => {
       LEFT JOIN likes_for_posts l ON p.id = l.post_id
       JOIN users u ON p.user_id = u.id
       WHERE p.title ILIKE $2 || '%'
-      ${category_id ? 'AND p.category_id = $3' : ''}
-      ${user_id ? 'AND p.user_id = $4' : ''}
+      ${category_id !== null ? 'AND p.category_id = $3' : ''}
+      ${user_id !== null ? 'AND p.user_id = $4' : ''}
       GROUP BY p.id, u.id
       ORDER BY p.created_at ${sort_variant}
       LIMIT $5
@@ -63,7 +63,13 @@ export const getPosts = async (req: Request, res: Response): Promise<void> => {
     const token = req.headers['authorization'] as string
     const user = jwt.decode(token?.split(' ')[1]) as User | null
 
-    const params = [user?.id, title, category_id, user_id, limit]
+    const params = [
+      user?.id,
+      title,
+      category_id !== null ? category_id : undefined,
+      user_id !== null ? user_id : undefined,
+      limit,
+    ]
 
     const result = await db.query(query, params)
 

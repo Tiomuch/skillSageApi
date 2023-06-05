@@ -57,7 +57,7 @@ export const getComments = async (req: Request, res: Response): Promise<void> =>
       LIMIT $3
     `
 
-    const commentsResult = await db.query(query, [user?.id, post_id, limit])
+    const commentsResult = await db.query(query, [user?.id, post_id !== null ? post_id : undefined, limit])
 
     const comments = commentsResult.rows.map((row) => ({
       id: row.id,
