@@ -61,6 +61,7 @@ export const getComments = async (req: Request, res: Response): Promise<void> =>
 
     const comments = commentsResult.rows.map((row) => ({
       id: row.id,
+      text: row.text,
       user_id: row.user_id,
       post_id: row.post_id,
       created_at: row.created_at,
@@ -122,6 +123,7 @@ export const getCommentById = async (req: Request, res: Response): Promise<void>
 
     const commentData = {
       id: comment.id,
+      text: comment.text,
       user_id: comment.user_id,
       content: comment.content,
       created_at: comment.created_at,
