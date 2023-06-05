@@ -41,7 +41,7 @@ export const createPost = async (req: Request, res: Response): Promise<void> => 
 
 export const getPosts = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { limit = 10, title = '', sort_variant = 'ASC', category_id = null, user_id = null } = req.query
+    const { limit = 10, title = '', sort_variant = 'ASC', category_id = undefined, user_id = undefined } = req.query
 
     const query = `
       SELECT p.id, p.user_id, p.category_id, p.title, p.description, p.created_at,
@@ -53,8 +53,8 @@ export const getPosts = async (req: Request, res: Response): Promise<void> => {
       LEFT JOIN likes_for_posts l ON p.id = l.post_id
       JOIN users u ON p.user_id = u.id
       WHERE p.title ILIKE $2 || '%'
-      ${category_id !== null ? 'AND p.category_id = $3' : ''}
-      ${user_id !== null ? 'AND p.user_id = $4' : ''}
+      ${category_id !== undefined ? 'AND p.category_id = $3' : ''}
+      ${user_id !== undefined ? 'AND p.user_id = $4' : ''}
       GROUP BY p.id, u.id
       ORDER BY p.created_at ${sort_variant}
       LIMIT $5
@@ -63,13 +63,7 @@ export const getPosts = async (req: Request, res: Response): Promise<void> => {
     const token = req.headers['authorization'] as string
     const user = jwt.decode(token?.split(' ')[1]) as User | null
 
-    const params = [
-      user?.id,
-      title,
-      category_id !== null ? category_id : null,
-      user_id !== null ? user_id : null,
-      limit,
-    ]
+    const params = [user?.id, title, category_id, user_id, limit]
 
     const result = await db.query(query, params)
 
@@ -91,10 +85,10 @@ export const getPosts = async (req: Request, res: Response): Promise<void> => {
     }))
 
     const totalResult = await db.query(
-      `SELECT COUNT(*) from posts WHERE title ILIKE $1 || '%' ${category_id !== null ? 'AND category_id = $2' : ''} ${
-        user_id !== null ? 'AND user_id = $3' : ''
-      }`,
-      user_id !== null ? [title, category_id, user_id] : [title, category_id],
+      `SELECT COUNT(*) from posts WHERE title ILIKE $1 || '%' ${
+        category_id !== undefined ? 'AND category_id = $2' : ''
+      } ${user_id !== undefined ? 'AND user_id = $3' : ''}`,
+      [title, category_id, user_id].filter((param) => param !== undefined),
     )
 
     const total = +totalResult.rows[0].count
