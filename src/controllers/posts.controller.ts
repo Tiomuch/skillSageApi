@@ -66,8 +66,8 @@ export const getPosts = async (req: Request, res: Response): Promise<void> => {
     const params = [
       user?.id,
       title,
-      category_id !== null ? category_id : undefined,
-      user_id !== null ? user_id : undefined,
+      category_id !== null ? category_id : null,
+      user_id !== null ? user_id : null,
       limit,
     ]
 
@@ -91,10 +91,10 @@ export const getPosts = async (req: Request, res: Response): Promise<void> => {
     }))
 
     const totalResult = await db.query(
-      `SELECT COUNT(*) from posts WHERE title ILIKE $1 || '%' ${category_id ? 'AND category_id = $2' : ''} ${
-        user_id ? 'AND user_id = $3' : ''
+      `SELECT COUNT(*) from posts WHERE title ILIKE $1 || '%' ${category_id !== null ? 'AND category_id = $2' : ''} ${
+        user_id !== null ? 'AND user_id = $3' : ''
       }`,
-      user_id ? [title, category_id, user_id] : [title, category_id],
+      user_id !== null ? [title, category_id, user_id] : [title, category_id],
     )
 
     const total = +totalResult.rows[0].count
