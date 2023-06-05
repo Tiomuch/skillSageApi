@@ -41,7 +41,7 @@ export const createPost = async (req: Request, res: Response): Promise<void> => 
 
 export const getPosts = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { limit = 10, title = '', sort_variant = 'ASC', category_id = null } = req.query
+    const { limit = 10, title = '', sort_variant = 'ASC', category_id = null, user_id = null } = req.query
 
     const query = `
       SELECT p.id, p.user_id, p.category_id, p.title, p.description, p.created_at,
@@ -54,15 +54,16 @@ export const getPosts = async (req: Request, res: Response): Promise<void> => {
       JOIN users u ON p.user_id = u.id
       WHERE p.title ILIKE $2 || '%'
       ${category_id ? 'AND p.category_id = $3' : ''}
+      ${user_id ? 'AND p.user_id = $4' : ''}
       GROUP BY p.id, u.id
       ORDER BY p.created_at ${sort_variant}
-      LIMIT $4
+      LIMIT $5
     `
 
     const token = req.headers['authorization'] as string
     const user = jwt.decode(token?.split(' ')[1]) as User | null
 
-    const params = [user?.id, title, category_id, limit]
+    const params = [user?.id, title, category_id, user_id, limit]
 
     const result = await db.query(query, params)
 
@@ -84,8 +85,10 @@ export const getPosts = async (req: Request, res: Response): Promise<void> => {
     }))
 
     const totalResult = await db.query(
-      `SELECT COUNT(*) from posts WHERE title ILIKE $1 || '%' ${category_id ? 'AND category_id = $2' : ''}`,
-      category_id ? [title, category_id] : [title],
+      `SELECT COUNT(*) from posts WHERE title ILIKE $1 || '%' ${category_id ? 'AND category_id = $2' : ''} ${
+        user_id ? 'AND user_id = $3' : ''
+      }`,
+      user_id ? [title, category_id, user_id] : [title, category_id],
     )
 
     const total = +totalResult.rows[0].count

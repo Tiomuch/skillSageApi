@@ -37,7 +37,7 @@ export const createComment = async (req: Request, res: Response): Promise<void> 
 
 export const getComments = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { limit = 10, sort_variant = 'ASC' } = req.query
+    const { limit = 10, sort_variant = 'ASC', post_id = null } = req.query
 
     const token = req.headers['authorization'] as string
     const user = jwt.decode(token?.split(' ')[1]) as User | null
@@ -51,17 +51,18 @@ export const getComments = async (req: Request, res: Response): Promise<void> =>
       FROM comments c 
       LEFT JOIN likes_for_comments l ON c.id = l.comment_id
       JOIN users u ON c.user_id = u.id
+      WHERE c.post_id = $2 OR ($2 IS NULL AND c.post_id IS NULL)
       GROUP BY c.id, u.id 
       ORDER BY c.created_at ${sort_variant}
-      LIMIT $2
+      LIMIT $3
     `
 
-    const commentsResult = await db.query(query, [user?.id, limit])
+    const commentsResult = await db.query(query, [user?.id, post_id, limit])
 
     const comments = commentsResult.rows.map((row) => ({
       id: row.id,
       user_id: row.user_id,
-      content: row.content,
+      post_id: row.post_id,
       created_at: row.created_at,
       likes_count: row.likes_count,
       dislikes_count: row.dislikes_count,
@@ -73,7 +74,10 @@ export const getComments = async (req: Request, res: Response): Promise<void> =>
       },
     }))
 
-    const totalResult = await db.query(`SELECT COUNT(*) from comments`)
+    const totalResult = await db.query(
+      `SELECT COUNT(*) from comments WHERE post_id = $1 OR ($1 IS NULL AND post_id IS NULL)`,
+      [post_id],
+    )
     const total = +totalResult.rows[0].count
 
     res.status(200).json({ data: comments, total })
