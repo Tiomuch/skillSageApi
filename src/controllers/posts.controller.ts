@@ -41,9 +41,9 @@ export const createPost = async (req: Request, res: Response): Promise<void> => 
 
 export const getPosts = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { limit = 10, title = '', sort_variant = 'ASC', category_id = undefined, user_id = undefined } = req.query
+    const { limit = 10, title = '', sort_variant = 'ASC', category_id, user_id } = req.query
 
-    const query = `
+    let query = `
       SELECT p.id, p.user_id, p.category_id, p.title, p.description, p.created_at,
         COALESCE(SUM(CASE WHEN l.liked THEN 1 ELSE 0 END), 0) AS likes_count,
         COALESCE(SUM(CASE WHEN NOT l.liked THEN 1 ELSE 0 END), 0) AS dislikes_count,
@@ -53,17 +53,30 @@ export const getPosts = async (req: Request, res: Response): Promise<void> => {
       LEFT JOIN likes_for_posts l ON p.id = l.post_id
       JOIN users u ON p.user_id = u.id
       WHERE p.title ILIKE $2 || '%'
-      ${category_id !== undefined ? 'AND p.category_id = $3' : ''}
-      ${user_id !== undefined ? 'AND p.user_id = $4' : ''}
+    `
+
+    const params = [user_id, title]
+
+    if (category_id !== undefined) {
+      query += 'AND p.category_id = $3 '
+      params.push(category_id)
+    }
+
+    if (user_id !== undefined) {
+      query += 'AND p.user_id = $4 '
+      params.push(user_id)
+    }
+
+    query += `
       GROUP BY p.id, u.id
       ORDER BY p.created_at ${sort_variant}
-      LIMIT $5
+      LIMIT $${params.length + 1}
     `
 
     const token = req.headers['authorization'] as string
     const user = jwt.decode(token?.split(' ')[1]) as User | null
 
-    const params = [user?.id, title, category_id, user_id, limit]
+    params.unshift(user?.id?.toString())
 
     const result = await db.query(query, params)
 
@@ -88,7 +101,7 @@ export const getPosts = async (req: Request, res: Response): Promise<void> => {
       `SELECT COUNT(*) from posts WHERE title ILIKE $1 || '%' ${
         category_id !== undefined ? 'AND category_id = $2' : ''
       } ${user_id !== undefined ? 'AND user_id = $3' : ''}`,
-      [title, category_id, user_id].filter((param) => param !== undefined),
+      params.filter((param) => param !== undefined),
     )
 
     const total = +totalResult.rows[0].count
