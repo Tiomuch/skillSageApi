@@ -41,10 +41,12 @@ export const createPost = async (req: Request, res: Response): Promise<void> => 
 
 export const getPosts = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { limit = 10, title = '', sort_variant = 'ASC', category_id, user_id } = req.query
+    const { limit = 10, title = '', sort_variant = 'ASC', category_id = null, user_id = null } = req.query
 
-    let query = `
-      SELECT p.id, p.user_id, p.category_id, p.title, p.description, p.created_at,
+    const token = req.headers['authorization'] as string
+    const user = jwt.decode(token?.split(' ')[1]) as User | null
+
+    let query = `SELECT p.id, p.user_id, p.category_id, p.title, p.description, p.created_at,
         COALESCE(SUM(CASE WHEN l.liked THEN 1 ELSE 0 END), 0) AS likes_count,
         COALESCE(SUM(CASE WHEN NOT l.liked THEN 1 ELSE 0 END), 0) AS dislikes_count,
         MAX(CASE WHEN l.user_id = $1 THEN CAST(l.liked AS INT) ELSE NULL END) AS liked,
@@ -52,31 +54,27 @@ export const getPosts = async (req: Request, res: Response): Promise<void> => {
       FROM posts p 
       LEFT JOIN likes_for_posts l ON p.id = l.post_id
       JOIN users u ON p.user_id = u.id
-      WHERE p.title ILIKE $2 || '%'
-    `
+      WHERE p.title ILIKE $2 || '%'`
 
-    const params = [user_id, title]
+    const params = [user?.id, title, limit]
 
-    if (category_id !== undefined) {
-      query += 'AND p.category_id = $3 '
+    if (!!category_id) {
+      query += ' AND p.category_id = $4'
+
       params.push(category_id)
     }
 
-    if (user_id !== undefined) {
-      query += 'AND p.user_id = $4 '
+    if (!!user_id) {
+      const num = !!category_id ? 5 : 4
+
+      query += ` AND p.user_id = $${num}`
+
       params.push(user_id)
     }
 
-    query += `
-      GROUP BY p.id, u.id
+    query += ` GROUP BY p.id, u.id
       ORDER BY p.created_at ${sort_variant}
-      LIMIT $${params.length + 1}
-    `
-
-    const token = req.headers['authorization'] as string
-    const user = jwt.decode(token?.split(' ')[1]) as User | null
-
-    params.unshift(user?.id?.toString())
+      LIMIT $3`
 
     const result = await db.query(query, params)
 
@@ -97,11 +95,19 @@ export const getPosts = async (req: Request, res: Response): Promise<void> => {
       },
     }))
 
+    const userPosition = category_id ? 3 : 2
+
     const totalResult = await db.query(
-      `SELECT COUNT(*) from posts WHERE title ILIKE $1 || '%' ${
-        category_id !== undefined ? 'AND category_id = $2' : ''
-      } ${user_id !== undefined ? 'AND user_id = $3' : ''}`,
-      params.filter((param) => param !== undefined),
+      `SELECT COUNT(*) from posts WHERE title ILIKE $1 || '%' ${category_id ? 'AND category_id = $2' : ''} ${
+        user_id ? `AND user_id = $${userPosition}` : ''
+      }`,
+      user_id
+        ? category_id
+          ? [title, category_id, user_id]
+          : [title, user_id]
+        : category_id
+        ? [title, category_id]
+        : [title],
     )
 
     const total = +totalResult.rows[0].count
